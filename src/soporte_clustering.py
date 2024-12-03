@@ -14,13 +14,16 @@ import seaborn as sns
 
 # Preprocesado y modelado
 # -----------------------------------------------------------------------
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler
 
 
 # Sacar número de clusters y métricas
 # -----------------------------------------------------------------------
 from yellowbrick.cluster import KElbowVisualizer
 from sklearn.metrics import silhouette_score, davies_bouldin_score
+from sklearn import metrics
+from sklearn.datasets import load_iris
+
 
 # Modelos de clustering
 # -----------------------------------------------------------------------
@@ -255,6 +258,30 @@ class Preprocesado:
 
         return self.dataframe
     
+    def robustscaler(self):
+        """
+        Estandariza las columnas numéricas del DataFrame.
+
+        Este método ajusta y transforma las columnas numéricas del DataFrame utilizando `StandardScaler` para que
+        tengan media 0 y desviación estándar 1.
+
+        Returns:
+            - pd.DataFrame. El DataFrame con las columnas numéricas estandarizadas.
+        """
+        # Sacamos el nombre de las columnas numéricas
+        col_numericas = self.dataframe.select_dtypes(include=np.number).columns
+
+        # Inicializamos el escalador para estandarizar los datos
+        scaler = RobustScaler()
+
+        # Ajustamos los datos y los transformamos
+        X_scaled = scaler.fit_transform(self.dataframe[col_numericas])
+
+        # Sobreescribimos los valores de las columnas en el DataFrame
+        self.dataframe[col_numericas] = X_scaled
+
+        return self.dataframe
+    
     def codificar(self):
         """
         Codifica las columnas categóricas del DataFrame.
@@ -447,7 +474,7 @@ class Clustering:
         dataframe_original["clusters_spectral"] = labels.astype(str)
         return dataframe_original
     
-    def modelo_dbscan(self, dataframe_original, eps_values=[0.5, 1.0, 1.5], min_samples_values=[3, 2, 1]):
+    def modelo_dbscan(self, dataframe_original, eps_values=[0.5, 1.0, 1.5], min_samples_values=[10, 5, 3]):
         """
         Aplica DBSCAN al DataFrame y añade las etiquetas de clusters al DataFrame original.
 
